@@ -1,0 +1,105 @@
+package com.jsp.spring.springboot_first_project.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+
+@Configuration
+public class SecurityConfig {
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration)
+            throws Exception {
+
+        return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http)
+            throws Exception {
+
+        http
+
+            .csrf(csrf -> csrf.disable())
+
+            .cors(cors -> {})
+
+            .userDetailsService(userDetailsService)
+
+            .securityContext(context ->
+                context.securityContextRepository(
+                    new HttpSessionSecurityContextRepository()
+                )
+            )
+
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(
+                    SessionCreationPolicy.IF_REQUIRED
+                )
+            )
+
+            .authorizeHttpRequests(auth -> auth
+
+                .requestMatchers("/auth/**")
+                .permitAll()
+
+                .requestMatchers("/departments/**")
+                .hasRole("ADMIN")
+
+                .requestMatchers("/doctors/**")
+                .hasRole("ADMIN")
+
+                .requestMatchers("/patients/me/**")
+                .hasRole("PATIENT")
+
+                .requestMatchers("/patients/**")
+                .hasRole("ADMIN")
+
+                .requestMatchers("/appointments/**")
+                .hasAnyRole(
+                    "ADMIN",
+                    "DOCTOR",
+                    "PATIENT"
+                )
+
+                .requestMatchers("/medicalrecords/**")
+                .hasAnyRole(
+                    "ADMIN",
+                    "DOCTOR",
+                    "PATIENT"
+                )
+
+                .requestMatchers("/prescriptions/**")
+                .hasAnyRole(
+                    "ADMIN",
+                    "DOCTOR",
+                    "PATIENT"
+                )
+
+                .anyRequest()
+                .authenticated()
+            );
+
+        return http.build();
+    }
+}

@@ -1,0 +1,65 @@
+package config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SecurityConfig {
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
+
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http)
+            throws Exception {
+
+        http
+
+            .csrf(csrf -> csrf.disable())
+
+            .cors(cors -> {})
+
+            .userDetailsService(userDetailsService)
+
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(
+                    SessionCreationPolicy.IF_REQUIRED
+                )
+            )
+
+            .authorizeHttpRequests(auth -> auth
+
+                .requestMatchers(
+                    "/auth/**"
+                ).permitAll()
+
+                .requestMatchers(
+                    "/admin/**"
+                ).hasRole("ADMIN")
+
+                .requestMatchers(
+                    "/doctor/**"
+                ).hasRole("DOCTOR")
+
+                .requestMatchers(
+                    "/patient/**"
+                ).hasRole("PATIENT")
+
+                .anyRequest().authenticated()
+            );
+
+        return http.build();
+    }
+}
+
+

@@ -1,0 +1,5 @@
+package com.jsp.spring.springboot_first_project.controller;
+
+public class LoginController {
+
+}

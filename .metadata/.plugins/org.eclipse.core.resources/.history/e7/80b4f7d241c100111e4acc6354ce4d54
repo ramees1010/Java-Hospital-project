@@ -1,0 +1,9 @@
+spring.application.name=springboot-first-project
+spring.datasource.url=jdbc:postgresql://localhost:5432/Hospital_db
+spring.datasource.username=postgres
+spring.datasource.password=root
+
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.properties.hibernate.format_sq1=true
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect

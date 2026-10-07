@@ -1,0 +1,108 @@
+package com.jsp.spring.springboot_first_project.controller;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.jsp.spring.springboot_first_project.entity.Appointment;
+import com.jsp.spring.springboot_first_project.entity.Doctor;
+import com.jsp.spring.springboot_first_project.entity.MedicalRecord;
+import com.jsp.spring.springboot_first_project.entity.Patient;
+import com.jsp.spring.springboot_first_project.exception.ResourceNotFoundException;
+import com.jsp.spring.springboot_first_project.repository.DoctorRepository;
+import com.jsp.spring.springboot_first_project.repository.MedicalRecordRepository;
+import com.jsp.spring.springboot_first_project.repository.PatientRepository;
+
+import jakarta.validation.Valid;
+
+@CrossOrigin(origins = "http://localhost:5173")
+
+@RestController
+public class MedicalRecordController {
+           
+	    @Autowired
+	    public MedicalRecordRepository medicalRecordRepository;
+	    @Autowired
+	    public DoctorRepository doctorRepository;
+	    @Autowired
+	    public PatientRepository patientRepository;
+
+	    @PostMapping("/medicalrecords/add")
+	    @ResponseStatus(code = HttpStatus.CREATED)
+	    public void createMedicalRecord(@Valid@RequestBody MedicalRecord medicalRecord) {
+	    	 Patient patient = patientRepository.findById(
+	    		        medicalRecord.patient.getPId()
+	    		    ).get();
+
+	    		    Doctor doctor = doctorRepository.findById(
+	    		        medicalRecord.doctor.getId()
+	    		    ).get();
+
+	    		    medicalRecord.patient = patient;
+	    		    medicalRecord.doctor = doctor;
+	        medicalRecordRepository.save(medicalRecord);
+	    }
+	    @PostMapping("/medicalrecords/addall")
+	    @ResponseStatus(code = HttpStatus.CREATED)
+	    public List <MedicalRecord>createAllMedicalRecords(@Valid@RequestBody List<MedicalRecord> medicalRecord) {
+	        return medicalRecordRepository.saveAll(medicalRecord);
+	    }
+	    @GetMapping("/medicalrecords")
+	    public List<MedicalRecord> getAllMedicalRecords(
+	            Authentication authentication) {
+
+	        String email = authentication.getName();
+
+	        Patient patient = patientRepository.findByEmail(email);
+
+	        if (patient != null) {
+	            return medicalRecordRepository.findByDoctor_Appointment_Patient(patient);
+	        }
+
+	        return medicalRecordRepository.findAll();
+	    }
+
+	    @GetMapping("/medicalrecords/{id}")
+	    public MedicalRecord getMedicalRecordById(@PathVariable Long id) {
+	        return medicalRecordRepository.findById(id).orElseThrow(()->
+	        new ResourceNotFoundException("medical records not found with this id"+id)
+	        );
+	    }
+
+	    @GetMapping("/medicalrecords/patient/{patientId}")
+	    public List<MedicalRecord> getMedicalRecordByPatient(@PathVariable Long patientId) {
+	        Patient patient = new Patient();
+	        patient.setPId(patientId);
+	        return medicalRecordRepository.findByDoctor_Appointment_Patient(patient);
+	    }
+
+	    @GetMapping("/medicalrecords/doctor/{doctorId}")
+	    public List<MedicalRecord> getMedicalRecordByDoctor(@PathVariable Long doctorId) {
+	        Doctor doctor = new Doctor();
+	        doctor.setId(doctorId);
+	        return medicalRecordRepository.findByDoctor(doctor);
+	    }
+
+	    @GetMapping("/medicalrecords/appointment/{appointmentId}")
+	    public List<MedicalRecord> getMedicalRecordByAppointment(@PathVariable Long appointmentId) {
+	        Appointment appointment = new Appointment();
+	        appointment.setAppointId(appointmentId);
+	        return medicalRecordRepository.findByDoctor_Appointment(appointment);
+	    }
+
+	    @GetMapping("/medicalrecords/date/{visitDate}")
+	    public List<MedicalRecord> getMedicalRecordByVisitDate(@PathVariable LocalDate visitDate) {
+	        return medicalRecordRepository.findByVisitDate(visitDate);
+	    }
+
+}

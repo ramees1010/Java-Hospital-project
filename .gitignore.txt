@@ -1,0 +1,16 @@
+.metadata/
+
+**/target/
+**/node_modules/
+**/dist/
+
+.env
+**/.env
+
+.classpath
+.project
+.settings/
+.vscode/
+
+.DS_Store
+Thumbs.db
